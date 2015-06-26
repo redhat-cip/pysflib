@@ -40,3 +40,24 @@ def get_cookie(auth_server,
         url = "http://" + url
         resp = requests.post(url, params, allow_redirects=False)
     return resp.cookies.get('auth_pubtkt', '')
+
+
+def _get_service_info(url, use_ssl=False, verify=True):
+    if use_ssl:
+        url = "https://" + url
+        resp = requests.get(url, allow_redirects=False,
+                            verify=verify)
+    else:
+        url = "http://" + url
+        resp = requests.get(url, allow_redirects=False)
+    return resp.json()
+
+
+def get_cauth_info(auth_server, use_ssl=False, verify=True):
+    url = "%s/auth/about/" % auth_server
+    return _get_service_info(url, use_ssl, verify)
+
+
+def get_managesf_info(auth_server, use_ssl=False, verify=True):
+    url = "%s/about/" % auth_server
+    return _get_service_info(url, use_ssl, verify)
