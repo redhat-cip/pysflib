@@ -14,13 +14,18 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import json
 import requests
 
 
-def get_cookie(auth_server,
-               username=None, password=None,
-               github_access_token=None,
-               use_ssl=False, verify=True):
+class IntrospectionNotAvailableError(Exception):
+    pass
+
+
+def _old_get_cookie(auth_server,
+                    username=None, password=None,
+                    github_access_token=None,
+                    use_ssl=False, verify=True):
     if username and password:
         url = "%s/auth/login" % auth_server
         params = {'username': username,
@@ -42,6 +47,50 @@ def get_cookie(auth_server,
     return resp.cookies.get('auth_pubtkt', '')
 
 
+def get_cookie(auth_server,
+               username=None, password=None,
+               github_access_token=None,
+               use_ssl=False, verify=True):
+    try:
+        cauth_info = get_cauth_info(auth_server, use_ssl, verify)
+        url = "%s/auth/login" % auth_server
+        if cauth_info['service']['version'] > '0.2.0':
+            auth_params = {'back': '/',
+                           'args': {}, }
+            methods = cauth_info['service']['auth_methods']
+            if (username and password and ('Password' in methods)):
+                auth_params['args'] = {'username': username,
+                                       'password': password}
+                auth_params['method'] = 'Password'
+            elif (github_access_token and
+                  ('GithubPersonalAccessToken' in methods)):
+                auth_params['args'] = {'token': github_access_token}
+                auth_params['method'] = 'GithubPersonalAccessToken'
+            else:
+                m = "Missing credentials (accepted auth methods: %s)"
+                methods = ','.join(methods)
+                raise ValueError(m % methods)
+            header = {'Content-Type': 'application/json'}
+            if use_ssl:
+                url = "https://" + url
+                resp = requests.post(url, json.dumps(auth_params),
+                                     allow_redirects=False,
+                                     verify=verify,
+                                     headers=header)
+            else:
+                url = "http://" + url
+                resp = requests.post(url, json.dumps(auth_params),
+                                     allow_redirects=False,
+                                     headers=header)
+            return resp.cookies.get('auth_pubtkt', '')
+        else:
+            return _old_get_cookie(auth_server, username, password,
+                                   github_access_token, use_ssl, verify)
+    except IntrospectionNotAvailableError:
+        return _old_get_cookie(auth_server, username, password,
+                               github_access_token, use_ssl, verify)
+
+
 def _get_service_info(url, use_ssl=False, verify=True):
     if use_ssl:
         url = "https://" + url
@@ -50,6 +99,8 @@ def _get_service_info(url, use_ssl=False, verify=True):
     else:
         url = "http://" + url
         resp = requests.get(url, allow_redirects=False)
+    if resp.status_code > 399:
+        raise IntrospectionNotAvailableError()
     return resp.json()
 
 

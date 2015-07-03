@@ -14,38 +14,79 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import json
 from unittest import TestCase
 from mock import patch
 
 from pysflib import sfauth
 
 
+class Fake:
+    cookies = {'auth_pubtkt': '1234'}
+
+
 def fake_send_request(*args, **kwargs):
-    class Fake:
-        cookies = {'auth_pubtkt': '1234'}
     return Fake()
 
 
 class FakeJSONResponse(object):
     def __init__(self, dic):
         self.dic = dic
+        self.status_code = 200
 
     def json(self):
         return self.dic
 
 
 class TestSFAuth(TestCase):
+    def test_get_cookie_old_style(self):
+        with patch('pysflib.sfauth.requests.get') as g:
+            g.return_value = FakeJSONResponse({})
+            g.return_value.status_code = 404
+            with patch('pysflib.sfauth.requests.post',
+                       new_callable=lambda: fake_send_request):
+                self.assertEqual(
+                    '1234',
+                    sfauth.get_cookie('auth.tests.dom', 'user1', 'userpass'))
+                self.assertEqual(
+                    '1234',
+                    sfauth.get_cookie('auth.tests.dom',
+                                      github_access_token='abcd'))
+                self.assertRaises(ValueError, sfauth.get_cookie,
+                                  'auth.tests.dom')
+
     def test_get_cookie(self):
-        with patch('pysflib.sfauth.requests.post',
-                   new_callable=lambda: fake_send_request):
-            self.assertEqual(
-                '1234',
-                sfauth.get_cookie('auth.tests.dom', 'user1', 'userpass'))
-            self.assertEqual(
-                '1234',
-                sfauth.get_cookie('auth.tests.dom',
-                                  github_access_token='abcd'))
-            self.assertRaises(ValueError, sfauth.get_cookie, 'auth.tests.dom')
+        with patch('pysflib.sfauth.requests.get') as g:
+            methods = ['Password', 'GithubPersonalAccessToken']
+            header = {'Content-Type': 'application/json'}
+            info = {'service': {'name': 'cauth',
+                                'version': '0.4.1',
+                                'auth_methods': methods}}
+            g.return_value = FakeJSONResponse(info)
+            with patch('pysflib.sfauth.requests.post') as p:
+                p.return_value = Fake()
+                self.assertEqual(
+                    '1234',
+                    sfauth.get_cookie('auth.tests.dom', 'user1', 'userpass'))
+                auth_context = {'back': '/',
+                                'method': 'Password',
+                                'args': {'username': 'user1',
+                                         'password': 'userpass'}}
+                p.assert_called_with('http://auth.tests.dom/auth/login',
+                                     json.dumps(auth_context),
+                                     allow_redirects=False,
+                                     headers=header)
+                self.assertEqual(
+                    '1234',
+                    sfauth.get_cookie('auth.tests.dom',
+                                      github_access_token='abcd'))
+                auth_context = {'back': '/',
+                                'method': 'GithubPersonalAccessToken',
+                                'args': {'token': 'abcd'}}
+                p.assert_called_with('http://auth.tests.dom/auth/login',
+                                     json.dumps(auth_context),
+                                     allow_redirects=False,
+                                     headers=header)
 
     def test_get_cauth_info(self):
         with patch('pysflib.sfauth.requests.get') as g:
