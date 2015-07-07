@@ -86,7 +86,7 @@ class GerritHook(object):
         self.config = yaml.load(conf_file)
         self.redmine_client = RedmineUtils(self.config['redmine_url'],
                                            key=self.config['redmine_key'])
-        bottom_url = "/_r/gitweb?p=%(project)s;a=commit;h=%(commit)s"
+        bottom_url = "/r/gitweb?p=%(project)s;a=commit;h=%(commit)s"
         self.gitweb_url = urllib_parse.urljoin(self.config['gitweb_url'],
                                                bottom_url)
 
