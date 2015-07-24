@@ -48,6 +48,6 @@ setup(
     include_package_data=True,
     packages=find_packages(exclude=['ez_setup']),
     url='http://softwarefactory.enovance.com/r/gitweb?p=pysflib.git;a=summary',
-    download_url='https://github.com/enovance/pysflib/tarball/%s' % VERSION,
+    download_url='https://github.com/redhat-cip/pysflib/tarball/%s' % VERSION,
     keywords=['software factory', 'CI', 'continuous integration'],
 )
