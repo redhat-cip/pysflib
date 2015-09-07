@@ -1,0 +1,147 @@
+Changelog
+=========
+
+0.3.0 (2015-08-13)
+------------------
+
+- Pin requirements to the latest working versions. [Matthieu Huin]
+
+- Change RCIP git repos. [Matthieu Huin]
+
+0.2.0 (2015-07-10)
+------------------
+
+- Support unified endpoint in cauth. [Matthieu Huin]
+
+- Gitweb link reported by the gerrit hook was wrong. [Fabien Boucher]
+
+- Add function to fetch cauth and managesf services info. [Matthieu
+  Huin]
+
+- Prepare lib for pypi. [Matthieu Huin]
+
+  Please note that installing with requirements.txt is the preferred method
+
+- Add a README. [Matthieu Huin]
+
+0.1 (2015-04-27)
+----------------
+
+- Add a simple test script. [Matthieu Huin]
+
+- ManageSF commit. [user1]
+
+- Get members of a given group in gerrit with pysflib. [Matthieu Huin]
+
+- Improved gerrit/zuul hooks. [Matthieu Huin]
+
+  * Add "recheck" hook in zuul for people used to the OpenStack workflow
+  * Move the gerrit hooks common methods to pysflib
+  * More keywords like "Closes", "Fix", "Related to"
+  * On merging, add a link to gitweb in Redmine
+  * hooks are validated with flake8
+  * Add unit testing for hooks in pysflib
+
+- Add authentication with Github API key. [Matthieu Huin]
+
+  Allow a user to authenticate with a Github API key; covers client
+  and server sides.
+
+- Handle SSL during auth. [Matthieu Huin]
+
+  When fetching the auth cookie, one can specify whether SSL should
+  be used or not.
+  This patch also adds an option to enforce SSL verification.
+
+- Add project membership UI in the dashboard. [George Peristerakis]
+
+  - Unifies how user are added/removed from groups at
+    project creation and after.
+  - User addition/removal is done by user email instead of
+    username.
+  - Add a membership UI management in the Dashboard.
+
+- Fix bug in dashboard if user is not a project owner. [Christian
+  Schwede]
+
+- Fix requirement install (session argument) + others. [Fabien Boucher]
+
+  - Need to avoid the usage of this really old virtualenv
+    version 1.10.1. (Installed by sfstack)
+    sudo pip install -U tox virtualenv
+  - Use sorted in unittest at some place because
+    after the update of tox and virtualenv order returned
+    in tests changes. So consolidate tests.
+  - Fix missing file for new edeploy version
+  - Fix jenkins-jobs usage for new PermissionDenied on .cache directory
+
+  We need to update our slaves, sfstack code and SF doc.
+
+- Add a basic dashboard. [Christian Schwede]
+
+  This adds a basic dashboard using AngularJS and the managesf REST API.
+  Currently listing, creating and deleting projects is supported and the open
+  reviews and bugs are shown.
+
+  An additional method was added to managesf to GET project infos including open
+  issues and reviews. The data for this call is internally cached for 15 seconds
+  because this triggers at least four internal REST API calls.
+
+- Reduce duplicated debug in pysflib. [Tristan Cacqueray]
+
+- Add the force option for project deletion on Gerrit. [Fabien Boucher]
+
+  Add by default force=True to managesf for project
+  deletion. A project not empty (with open patchsets)
+  is not removed on Gerrit it the force option is not given
+  to the API of Gerrit.
+
+- Improve mock of python-redmine for pysflib unit tests. [Fabien
+  Boucher]
+
+  A recent update of python-redmine made our unitests
+  long to run. This patch fix how we mocked the problematic
+  call to Redmine.
+
+- Renamed and change url. [Tristan Cacqueray]
+
+  * SoftwareFactory into software-factory
+  * sf.dom into softwarefactory.enovance.com
+
+- Use fork of pygerrit to fix deps version problem. [Fabien Boucher]
+
+  - Use a forked version of pygerrit waiting for
+    the pr https://github.com/sonyxperiadev/pygerrit/pull/23
+    to be merged.
+
+- Managesf uses pysflib.sfgerrit.GerritUtils. [Fabien Boucher]
+
+  - Change managesf gerrit controller to user pysflib
+  - Update managesf gerrit controller unittests
+  - Add pysflib GerritUtils unittests
+
+- Add GerritUtils to pysflib (func test part) [Fabien Boucher]
+
+  - Force PIP to be install at 1.5.6 before installing pysflib
+  - Create GerritUtils in pysflib base on pygerrit
+  - Change functional tests to use it
+  - Remove old GerritUtil and GerritRestAPI class
+    from utils.py
+
+- Provide pysflib with RedmineUtils. [Fabien Boucher]
+
+  - Introduce usage of python-redmine lib instead
+    of re-writting the wheel.
+  - Install pysflib on the install-server role
+  - Install pysflib on the softwarefactory role
+  - Modify test_01,08,10,11 to use the new pysflib for Redmine
+    API calls.
+  - Remove RedmineUtil class from utils.py file of
+    functional tests.
+  - Use pysflib for managesf Redmine API calls
+  - Adapt managesf redmine controler tests
+  - Gerrit hooks now uses pysflib
+  - Cauth userdetail now uses pysflib
+  - Fix cauth requirements file not used
+
+
