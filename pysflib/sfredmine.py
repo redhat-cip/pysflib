@@ -28,7 +28,7 @@ from redmine.exceptions import (
     ResourceNotFoundError,
     RequestEntityTooLargeError,
     UnknownError
-    )
+)
 
 
 class SFRedmine(Redmine):

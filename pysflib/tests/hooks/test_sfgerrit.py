@@ -89,15 +89,13 @@ class TestGerritHooks(TestCase):
         cls.hook = hooks.GerritHook(conf_file=hooks_conf)
         cls.hook.status_closing = 'Closed'
         cls.hook.status_related = 'In progress'
-        cls.hook.msg = """The following change on Gerrit has been merged to: %(branch)s
-Review: %(url)s
-Submitter: %(submitter)s
-
-Commit message:
-%(commit)s
-
-gitweb: %(gitweb)s
-"""
+        cls.hook.msg = ("The following change on Gerrit " +
+                        "has been merged to: %(branch)s\n" +
+                        "Review: %(url)s\n" +
+                        "Submitter: %(submitter)s\n\n" +
+                        "Commit message:\n" +
+                        "%(commit)s\n\n" +
+                        "gitweb: %(gitweb)s\n")
 
     def _test_parse_commit_message(self, regexp, message, expected_result):
         self.assertEqual(expected_result,

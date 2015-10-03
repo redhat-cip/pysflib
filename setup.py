@@ -32,7 +32,7 @@ INSTALL_REQUIRES = []
 
 DEP_LINKS = []
 
-VERSION = '0.4.0'
+VERSION = '0.5.0'
 
 setup(
     name='pysflib',
