@@ -113,6 +113,15 @@ class TestSFRedmine(TestCase):
             self.rm.create_project('myissue', '', False)
             self.assertTrue(c.called)
 
+    def test_create_project_with_different_name(self):
+        with patch('redmine.managers.ResourceManager.create') as cc:
+            self.rm.create_project('SF test project', '', False)
+            self.assertTrue(cc.called)
+            cc.assert_called_with(description='',
+                                  identifier='sf-test-project',
+                                  is_public='true',
+                                  name='SF test project')
+
     def test_check_user_role(self):
         def my_fake_resource(*args, **kwargs):
             class Fake:

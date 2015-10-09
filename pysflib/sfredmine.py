@@ -15,20 +15,19 @@
 # We rely on https://github.com/maxtepkeev/python-redmine
 
 import json
+import re
 import requests
 
 from redmine import Redmine
 from redmine.utilities import to_string, json_response
-from redmine.exceptions import (
-    AuthError,
-    ConflictError,
-    ImpersonateError,
-    ServerError,
-    ValidationError,
-    ResourceNotFoundError,
-    RequestEntityTooLargeError,
-    UnknownError
-)
+from redmine.exceptions import (AuthError,
+                                ConflictError,
+                                ImpersonateError,
+                                ServerError,
+                                ValidationError,
+                                ResourceNotFoundError,
+                                RequestEntityTooLargeError,
+                                UnknownError)
 
 
 class SFRedmine(Redmine):
@@ -101,6 +100,9 @@ class RedmineUtils:
     def __init__(self, *args, **kwargs):
         self.r = SFRedmine(*args, **kwargs)
 
+    def _slugify(self, name):
+        return name.strip().replace(' ', '-').lower()
+
     def project_exists(self, name):
         try:
             self.r.project.get(name)
@@ -142,6 +144,7 @@ class RedmineUtils:
             return None
 
     def create_issue(self, name, subject=''):
+        name = self._slugify(name)
         issue = self.r.issue.create(project_id=name,
                                     subject=subject)
         return issue.id
@@ -153,6 +156,7 @@ class RedmineUtils:
             return None
 
     def check_user_role(self, name, username, role):
+        name = self._slugify(name)
         for u in self.r.project_membership.filter(project_id=name):
             if self.r.user.get(u.user.id).firstname == username:
                 for r in u.roles:
@@ -161,8 +165,15 @@ class RedmineUtils:
         return False
 
     def create_project(self, name, description, private):
+        identifier = self._slugify(name)
+        name_re = re.compile('^[a-z][a-z0-9-_]{0,99}$')
+        if not name_re.match(identifier):
+            raise ValueError('The name should have a length between 1 and '
+                             '100 characters. Only letters (a-z), numbers,'
+                             ' dashes, spaces and underscores are '
+                             'allowed, must start with a letter')
         self.r.project.create(name=name,
-                              identifier=name,
+                              identifier=identifier,
                               description=description,
                               is_public='false' if private else 'true')
 
@@ -203,6 +214,7 @@ class RedmineUtils:
 
     def get_project_membership_for_user(self, pname, uid):
         try:
+            pname = self._slugify(pname)
             memb = self.r.project_membership.filter(project_id=pname)
         except ResourceNotFoundError:
             return None
@@ -228,6 +240,7 @@ class RedmineUtils:
 
     def update_project_membership(self, pname, memberships):
         for m in memberships:
+            pname = self._slugify(pname)
             self.r.project_membership.create(project_id=pname,
                                              user_id=m['user_id'],
                                              role_ids=m['role_ids'])
