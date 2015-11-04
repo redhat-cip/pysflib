@@ -168,7 +168,7 @@ class TestGerritUtils(TestCase):
             self.assertTrue(self.ge.get_my_groups())
         with patch('pysflib.sfgerrit.SFGerritRestAPI.get',
                    side_effect=raise_fake_exc):
-            self.assertFalse(self.ge.get_my_groups_id())
+            self.assertFalse(self.ge.get_my_groups())
 
     def test_get_my_groups_id(self):
         with patch('pysflib.sfgerrit.SFGerritRestAPI.get') as g:
@@ -177,6 +177,42 @@ class TestGerritUtils(TestCase):
         with patch('pysflib.sfgerrit.SFGerritRestAPI.get',
                    side_effect=raise_fake_exc):
             self.assertFalse(self.ge.get_my_groups_id())
+
+    def test_get_user_groups(self):
+        with patch('pysflib.sfgerrit.SFGerritRestAPI.get') as g:
+            g.return_value = {
+                "Administrators": {
+                    "id": "6a1e70e1a88782771a91808c8af9bbb7a9871389",
+                    "url": "#/admin/groups/uuid-6a1e70e1a88782771a91808c",
+                    "options": {},
+                    "description": "Gerrit Site Administrators",
+                    "group_id": 1,
+                    "owner": "Administrators",
+                    "owner_id": "6a1e70e1a88782771a91808c8af9bbb7a9871389"
+                },
+                "Anonymous Users": {
+                    "id": "global%3AAnonymous-Users",
+                    "url": "#/admin/groups/uuid-global%3AAnonymous-Users",
+                    "options": {},
+                    "description": "Any user, signed-in or not",
+                    "group_id": 2,
+                    "owner": "Administrators",
+                    "owner_id": "6a1e70e1a88782771a91808c8af9bbb7a9871389"
+                }}
+            self.assertTrue(self.ge.get_user_groups('toto'))
+            g.assert_called_with('accounts/%s/groups' % 'toto')
+        with patch('pysflib.sfgerrit.SFGerritRestAPI.get',
+                   side_effect=raise_fake_exc):
+            self.assertFalse(self.ge.get_user_groups('bobobo'))
+
+    def test_get_user_groups_id(self):
+        with patch('pysflib.sfgerrit.SFGerritRestAPI.get') as g:
+            g.return_value = [{'id': 1}, {'id': 2}]
+            self.assertListEqual(self.ge.get_user_groups_id('toto'), [1, 2])
+            g.assert_called_with('accounts/%s/groups' % 'toto')
+        with patch('pysflib.sfgerrit.SFGerritRestAPI.get',
+                   side_effect=raise_fake_exc):
+            self.assertFalse(self.ge.get_user_groups_id('blipblop'))
 
     def test_groups_exists(self):
         with patch('pysflib.sfgerrit.SFGerritRestAPI.get') as g:

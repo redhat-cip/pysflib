@@ -198,6 +198,13 @@ class GerritUtils:
             self._manage_errors(exp)
             return []
 
+    def get_user_groups(self, username):
+        try:
+            return self.g.get('accounts/%s/groups' % username)
+        except HTTPError as exp:
+            self._manage_errors(exp)
+            return []
+
     def get_all_users(self):
         try:
             return self.g.get('accounts')
@@ -208,6 +215,13 @@ class GerritUtils:
     def get_my_groups_id(self):
         try:
             grps = self.g.get('accounts/self/groups')
+            return [g['id'] for g in grps]
+        except HTTPError as e:
+            return self._manage_errors(e)
+
+    def get_user_groups_id(self, username):
+        try:
+            grps = self.g.get('accounts/%s/groups' % username)
             return [g['id'] for g in grps]
         except HTTPError as e:
             return self._manage_errors(e)
