@@ -170,6 +170,8 @@ class GerritUtils:
     def get_project_groups(self, name):
         try:
             ret = self.g.get('access/?project=%s' % name)
+            if 'refs/*' not in ret[name]['local']:
+                return []
             perms = ret[name]['local']['refs/*']['permissions']
             groups_ids = []
             groups = []

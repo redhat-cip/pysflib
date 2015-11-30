@@ -136,6 +136,13 @@ class TestGerritUtils(TestCase):
                    side_effect=raise_fake_exc):
             self.assertFalse(self.ge.get_project_groups('p1'))
 
+    def test_get_project_groups_without_permission(self):
+        r1 = json.load(open('test_data/gerrit_access.json'))
+        with patch('pysflib.sfgerrit.SFGerritRestAPI.get',
+                   side_effect=[r1]):
+            groups = self.ge.get_project_groups('MyProject')
+            self.assertEqual([], groups)
+
     def test_get_account(self):
         with patch('pysflib.sfgerrit.SFGerritRestAPI.get') as g:
             g.return_value = 'account'
