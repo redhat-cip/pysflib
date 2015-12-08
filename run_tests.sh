@@ -16,22 +16,10 @@
 
 echo "$(date) - $(hostname)"
 
-echo "FLAKE8 tests"
-echo "~~~~~~~~~~~~"
-find . -iname "*.py" | grep -v .tox | xargs flake8
-FLAKE8_ERRORS=$?
-echo
-
-echo "BASH8 tests"
-echo "~~~~~~~~~~~"
-find . -name "*.sh" | grep -v '\.tox' | xargs bash8
-BASH8_ERRORS=$?
-echo
-
 echo "Pysflib tests"
 echo "~~~~~~~~~~~~~"
 (rm -Rf .tox; tox)
 PYSFLIB_ERRORS=$?
 echo
 
-exit $[${FLAKE8_ERRORS} + ${BASH8_ERRORS} + ${PYSFLIB_ERRORS}];
+exit ${PYSFLIB_ERRORS}
