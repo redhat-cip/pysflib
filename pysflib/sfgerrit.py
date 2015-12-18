@@ -155,7 +155,10 @@ class GerritUtils:
             return self._manage_errors(e)
 
     def get_projects(self):
-        return sorted(self.g.get('projects/?').keys())
+        projects = sorted(self.g.get('projects/?').keys())
+        if 'All-Users' in projects:
+            projects.remove('All-Users')
+        return projects
 
     def get_project_owner(self, name):
         try:
