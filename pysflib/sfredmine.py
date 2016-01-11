@@ -19,7 +19,7 @@ import re
 import requests
 
 from redmine import Redmine
-from redmine.utilities import to_string, json_response
+from redmine.utilities import to_string
 from redmine.exceptions import (AuthError,
                                 ConflictError,
                                 ImpersonateError,
@@ -71,7 +71,7 @@ class SFRedmine(Redmine):
             elif not response.content.strip():
                 return True
             else:
-                return json_response(response.json)
+                return response.json()
         elif response.status_code == 401:
             raise AuthError
         elif response.status_code == 404:
@@ -84,7 +84,7 @@ class SFRedmine(Redmine):
             raise RequestEntityTooLargeError
         elif response.status_code == 422:
             raise ValidationError(to_string(', '.join(
-                json_response(response.json)['errors'])))
+                response.json()['errors'])))
         elif response.status_code == 500:
             raise ServerError
 
