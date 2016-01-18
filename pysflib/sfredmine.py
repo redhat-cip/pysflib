@@ -118,6 +118,9 @@ class RedmineUtils:
 
     def get_open_issues(self):
         url = "%s/issues.json?status_id=open" % self.r.url
+        data = self.r.request('get', url)
+        count = data.get('total_count')
+        url = "%s&offset=0&limit=%s" % (url, count)
         return self.r.request('get', url)
 
     def get_issues_by_project(self, name):
