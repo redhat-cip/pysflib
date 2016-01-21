@@ -196,6 +196,13 @@ class GerritUtils:
         except HTTPError as e:
             return self._manage_errors(e)
 
+    def create_account(self, username, user_data):
+        try:
+            return self.g.put('accounts/%s' % username,
+                              data=user_data)
+        except HTTPError as e:
+            return self._manage_errors(e)
+
     def get_my_groups(self):
         try:
             return self.g.get('accounts/self/groups') or []
@@ -306,16 +313,16 @@ class GerritUtils:
             return self._manage_errors(e)
 
     # Keys related API calls #
-    def add_pubkey(self, pubkey):
+    def add_pubkey(self, pubkey, user='self'):
         headers = {'content-type': 'plain/text'}
-        response = self.g.post('accounts/self/sshkeys',
+        response = self.g.post('accounts/%s/sshkeys' % user,
                                headers=headers,
                                data=pubkey)
         return response['seq']
 
-    def del_pubkey(self, index):
+    def del_pubkey(self, index, user='self'):
         try:
-            self.g.delete('accounts/self/sshkeys/' + str(index),
+            self.g.delete('accounts/%s/sshkeys/%s' % (user, str(index)),
                           headers={})
         except HTTPError as e:
             return self._manage_errors(e)

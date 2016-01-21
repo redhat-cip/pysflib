@@ -151,6 +151,14 @@ class TestGerritUtils(TestCase):
                    side_effect=raise_fake_exc):
             self.assertFalse(self.ge.get_account('user1'))
 
+    def test_create_account(self):
+        with patch('pysflib.sfgerrit.SFGerritRestAPI.put') as p:
+            p.return_value = 'account'
+            self.assertEqual(self.ge.create_account('user1', {}), 'account')
+        with patch('pysflib.sfgerrit.SFGerritRestAPI.put',
+                   side_effect=raise_fake_exc):
+            self.assertFalse(self.ge.create_account('user1', {}))
+
     def test_get_my_groups(self):
         with patch('pysflib.sfgerrit.SFGerritRestAPI.get') as g:
             g.return_value = {
@@ -291,10 +299,22 @@ class TestGerritUtils(TestCase):
         with patch('pysflib.sfgerrit.SFGerritRestAPI.post') as p:
             p.return_value = {'seq': 1}
             self.assertEqual(self.ge.add_pubkey('rsa ...'), 1)
+            p.assert_called_with('accounts/self/sshkeys',
+                                 headers={'content-type': 'plain/text'},
+                                 data='rsa ...')
+            self.assertEqual(self.ge.add_pubkey('rsa ...', user='joe'), 1)
+            p.assert_called_with('accounts/joe/sshkeys',
+                                 headers={'content-type': 'plain/text'},
+                                 data='rsa ...')
 
     def test_del_pubkey(self):
-        with patch('pysflib.sfgerrit.SFGerritRestAPI.delete'):
+        with patch('pysflib.sfgerrit.SFGerritRestAPI.delete') as d:
             self.assertEqual(self.ge.del_pubkey(1), None)
+            d.assert_called_with('accounts/self/sshkeys/1',
+                                 headers={})
+            self.assertEqual(self.ge.del_pubkey(1, user='bob'), None)
+            d.assert_called_with('accounts/bob/sshkeys/1',
+                                 headers={})
         with patch('pysflib.sfgerrit.SFGerritRestAPI.delete',
                    side_effect=raise_fake_exc):
             self.assertFalse(self.ge.del_pubkey(1))
