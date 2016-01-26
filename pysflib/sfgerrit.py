@@ -199,7 +199,7 @@ class GerritUtils:
     def create_account(self, username, user_data):
         try:
             return self.g.put('accounts/%s' % username,
-                              data=user_data)
+                              data=json.dumps(user_data))
         except HTTPError as e:
             return self._manage_errors(e)
 
