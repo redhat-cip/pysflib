@@ -16,6 +16,7 @@
 
 import json
 import logging
+import urllib
 from requests.exceptions import HTTPError
 from pygerrit.rest import GerritRestAPI
 from pygerrit.rest import _decode_response
@@ -116,6 +117,7 @@ class GerritUtils:
     # Projects related API calls #
     def project_exists(self, name):
         try:
+            name = urllib.quote_plus(name)
             self.g.get('projects/%s' % name)
             return True
         except HTTPError as e:
@@ -129,6 +131,7 @@ class GerritUtils:
             "owners": owners,
         })
         try:
+            name = urllib.quote_plus(name)
             self.g.put('projects/%s' % name,
                        data=data)
         except HTTPError as e:
@@ -136,6 +139,7 @@ class GerritUtils:
 
     def delete_project(self, name, force=False):
         try:
+            name = urllib.quote_plus(name)
             if force:
                 data = json.dumps({"force": True})
                 self.g.delete(
@@ -150,6 +154,7 @@ class GerritUtils:
 
     def get_project(self, name):
         try:
+            name = urllib.quote_plus(name)
             return self.g.get('projects/%s' % name)
         except HTTPError as e:
             return self._manage_errors(e)

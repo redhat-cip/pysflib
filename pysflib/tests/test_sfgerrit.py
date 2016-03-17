@@ -82,7 +82,7 @@ class TestGerritUtils(TestCase):
 
     def test_create_project(self):
         with patch('pysflib.sfgerrit.SFGerritRestAPI.put'):
-            self.assertEqual(self.ge.create_project('p1', 'desc', 'p1-ptl'),
+            self.assertEqual(self.ge.create_project('p1', 'desc', 'ns\p1-ptl'),
                              None)
         with patch('pysflib.sfgerrit.SFGerritRestAPI.put',
                    side_effect=raise_fake_exc):
@@ -90,7 +90,7 @@ class TestGerritUtils(TestCase):
 
     def test_delete_project(self):
         with patch('pysflib.sfgerrit.SFGerritRestAPI.delete'):
-            self.assertEqual(self.ge.delete_project('p1'), None)
+            self.assertEqual(self.ge.delete_project('ns1\p1'), None)
         with patch('pysflib.sfgerrit.SFGerritRestAPI.delete',
                    side_effect=raise_fake_exc):
             self.assertFalse(self.ge.delete_project('p1'))
@@ -98,7 +98,7 @@ class TestGerritUtils(TestCase):
     def test_get_project(self):
         with patch('pysflib.sfgerrit.SFGerritRestAPI.get') as g:
             g.return_value = 'project'
-            self.assertEqual(self.ge.get_project('p1'), 'project')
+            self.assertEqual(self.ge.get_project('ns2\p1'), 'project')
         with patch('pysflib.sfgerrit.SFGerritRestAPI.get',
                    side_effect=raise_fake_exc):
             self.assertFalse(self.ge.get_project('p1'))
