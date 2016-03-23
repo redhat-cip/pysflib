@@ -50,6 +50,9 @@ class TestSFRedmine(TestCase):
     def test_project_exists(self):
         with patch('redmine.managers.ResourceManager.get'):
             self.assertTrue(self.rm.project_exists('p1'))
+        with patch('redmine.managers.ResourceManager.get') as g:
+            self.assertTrue(self.rm.project_exists('ns1/p1'))
+            g.assert_called_with('ns1_p1')
         with patch('redmine.managers.ResourceManager.get',
                    side_effect=raisenotfound):
             self.assertFalse(self.rm.project_exists('p1'))
@@ -70,6 +73,9 @@ class TestSFRedmine(TestCase):
         with patch('redmine.managers.ResourceManager.get',
                    new_callable=lambda: my_fake_resource):
             self.assertListEqual([1, 1], self.rm.get_issues_by_project('p1'))
+        with patch('redmine.managers.ResourceManager.get') as g:
+            self.rm.get_issues_by_project('ns2/p2')
+            g.assert_called_with('ns2_p2')
         with patch('redmine.managers.ResourceManager.get',
                    side_effect=raisenotfound):
             self.assertEqual(None, self.rm.get_issues_by_project('p1'))
@@ -121,6 +127,15 @@ class TestSFRedmine(TestCase):
                                   identifier='sf-test-project',
                                   is_public='true',
                                   name='SF test project')
+
+    def test_create_project_with_antislash(self):
+        with patch('redmine.managers.ResourceManager.create') as cc:
+            self.rm.create_project('SF/project', '', False)
+            self.assertTrue(cc.called)
+            cc.assert_called_with(description='',
+                                  identifier='sf_project',
+                                  is_public='true',
+                                  name='SF/project')
 
     def test_check_user_role(self):
         def my_fake_resource(*args, **kwargs):

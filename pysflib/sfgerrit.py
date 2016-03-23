@@ -238,6 +238,7 @@ class GerritUtils:
 
     def get_user_groups_id(self, username):
         try:
+            username = urllib.quote_plus(username)
             grps = self.g.get('accounts/%s/groups' % username) or []
             return [g['id'] for g in grps]
         except HTTPError as e:
@@ -254,6 +255,7 @@ class GerritUtils:
             "visible_to_all": True
         })
         try:
+            name = urllib.quote_plus(name)
             self.g.put('groups/%s' % name,
                        data=data)
         except HTTPError as e:
@@ -261,12 +263,14 @@ class GerritUtils:
 
     def get_group_id(self, name):
         try:
+            name = urllib.quote_plus(name)
             return self.g.get('groups/%s/detail' % name)['id']
         except HTTPError as e:
             return self._manage_errors(e)
 
     def get_group_members(self, group_id):
         try:
+            group_id = urllib.quote_plus(group_id)
             return self.g.get('groups/%s/members/' % group_id)
         except HTTPError as e:
             return self._manage_errors(e)
@@ -290,12 +294,14 @@ class GerritUtils:
 
     def get_group_owner(self, name):
         try:
+            name = urllib.quote_plus(name)
             return self.g.get('groups/%s/owner' % name)['owner']
         except HTTPError as e:
             return self._manage_errors(e)
 
     def member_in_group(self, username, groupname):
         try:
+            groupname = urllib.quote_plus(groupname)
             grp = self.g.get('groups/%s/members/%s' % (groupname,
                                                        username))
             return (len(grp) >= 1 and grp['username'] == username)
@@ -304,6 +310,7 @@ class GerritUtils:
 
     def add_group_member(self, username, groupname):
         try:
+            groupname = urllib.quote_plus(groupname)
             self.g.post('groups/%s/members/%s' % (groupname,
                                                   username),
                         headers={})
@@ -312,6 +319,7 @@ class GerritUtils:
 
     def delete_group_member(self, groupname, username):
         try:
+            groupname = urllib.quote_plus(groupname)
             self.g.delete('groups/%s/members/%s' % (groupname,
                                                     username))
         except HTTPError as e:

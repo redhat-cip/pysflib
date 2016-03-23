@@ -101,11 +101,11 @@ class RedmineUtils:
         self.r = SFRedmine(*args, **kwargs)
 
     def _slugify(self, name):
-        return name.strip().replace(' ', '-').lower()
+        return name.strip().replace(' ', '-').replace('/', '_').lower()
 
     def project_exists(self, name):
         try:
-            self.r.project.get(name)
+            self.r.project.get(self._slugify(name))
         except ResourceNotFoundError:
             return False
         return True
@@ -125,7 +125,7 @@ class RedmineUtils:
 
     def get_issues_by_project(self, name):
         try:
-            p = self.r.project.get(name)
+            p = self.r.project.get(self._slugify(name))
         except ResourceNotFoundError:
             return None
         return [i.id for i in p.issues]
@@ -256,7 +256,7 @@ class RedmineUtils:
 
     def delete_project(self, pname):
         try:
-            return self.r.project.delete(pname)
+            return self.r.project.delete(self._slugify(pname))
         except ResourceNotFoundError:
             return None
 

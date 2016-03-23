@@ -81,9 +81,17 @@ class TestGerritUtils(TestCase):
             self.assertFalse(self.ge.project_exists('p1'))
 
     def test_create_project(self):
-        with patch('pysflib.sfgerrit.SFGerritRestAPI.put'):
-            self.assertEqual(self.ge.create_project('p1', 'desc', 'ns\p1-ptl'),
+        data = json.dumps({"description": "desc",
+                           "create_empty_commit": True,
+                           "name": "ns1/pj2",
+                           "owners": "ns1/pj2-ptl"})
+        with patch('pysflib.sfgerrit.SFGerritRestAPI.put') as g:
+            self.assertEqual(self.ge.create_project('ns1/pj2',
+                                                    'desc',
+                                                    'ns1/pj2-ptl'),
                              None)
+            g.assert_called_with('projects/ns1%2Fpj2', data=data)
+
         with patch('pysflib.sfgerrit.SFGerritRestAPI.put',
                    side_effect=raise_fake_exc):
             self.assertFalse(self.ge.create_project('p1', 'desc', 'p1-ptl'))
@@ -99,6 +107,7 @@ class TestGerritUtils(TestCase):
         with patch('pysflib.sfgerrit.SFGerritRestAPI.get') as g:
             g.return_value = 'project'
             self.assertEqual(self.ge.get_project('ns2\p1'), 'project')
+            g.assert_called_with('projects/ns2%5Cp1')
         with patch('pysflib.sfgerrit.SFGerritRestAPI.get',
                    side_effect=raise_fake_exc):
             self.assertFalse(self.ge.get_project('p1'))
@@ -107,6 +116,7 @@ class TestGerritUtils(TestCase):
         with patch('pysflib.sfgerrit.SFGerritRestAPI.get') as g:
             g.return_value = {'a': None, 'b': None}
             self.assertListEqual(self.ge.get_projects(), ['a', 'b'])
+            g.assert_called_with('projects/?')
 
     def test_get_project_owner(self):
         with patch('pysflib.sfgerrit.SFGerritRestAPI.get') as g:
@@ -189,6 +199,7 @@ class TestGerritUtils(TestCase):
         with patch('pysflib.sfgerrit.SFGerritRestAPI.get') as g:
             g.return_value = [{'id': 1}, {'id': 2}]
             self.assertListEqual(self.ge.get_my_groups_id(), [1, 2])
+            g.assert_called_with('accounts/self/groups')
         with patch('pysflib.sfgerrit.SFGerritRestAPI.get',
                    side_effect=raise_fake_exc):
             self.assertFalse(self.ge.get_my_groups_id())
@@ -234,9 +245,27 @@ class TestGerritUtils(TestCase):
             g.return_value = ['p1-ptl', 'p2-ptl']
             self.assertTrue(self.ge.group_exists('p2-ptl'))
 
+        with patch('pysflib.sfgerrit.SFGerritRestAPI.get') as g:
+            g.return_value = ['ns\p1-ptl', 'ns\p1-dev']
+            self.assertTrue(self.ge.group_exists('ns\p1-dev'))
+            g.assert_called_with('groups/')
+
     def test_create_group(self):
-        with patch('pysflib.sfgerrit.SFGerritRestAPI.put'):
+        data = json.dumps({"visible_to_all": True,
+                           "description": "desc",
+                           "name": "p1-ptl"})
+        with patch('pysflib.sfgerrit.SFGerritRestAPI.put') as g:
             self.assertEqual(self.ge.create_group('p1-ptl', 'desc'), None)
+            g.assert_called_with('groups/p1-ptl', data=data)
+
+        data = json.dumps({"visible_to_all": True,
+                           "description": "desc",
+                           "name": "ns1\\prj1-dev"})
+        with patch('pysflib.sfgerrit.SFGerritRestAPI.put') as g:
+            self.assertEqual(self.ge.create_group('ns1\\prj1-dev', 'desc'),
+                             None)
+            g.assert_called_with('groups/ns1%5Cprj1-dev', data=data)
+
         with patch('pysflib.sfgerrit.SFGerritRestAPI.put',
                    side_effect=raise_fake_exc):
             self.assertFalse(self.ge.create_group('p1-ptl', 'desc'))
@@ -281,8 +310,15 @@ class TestGerritUtils(TestCase):
             self.assertFalse(self.ge.member_in_group('user1', 'p1-ptl'))
 
     def test_add_group_member(self):
-        with patch('pysflib.sfgerrit.SFGerritRestAPI.post'):
+        with patch('pysflib.sfgerrit.SFGerritRestAPI.post') as g:
             self.assertEqual(self.ge.add_group_member('user1', 'p1-ptl'), None)
+            g.assert_called_with('groups/p1-ptl/members/user1', headers={})
+
+        with patch('pysflib.sfgerrit.SFGerritRestAPI.post') as g:
+            self.assertEqual(self.ge.add_group_member('u1', 'n3/p2-ptl'),
+                             None)
+            g.assert_called_with('groups/n3%2Fp2-ptl/members/u1',
+                                 headers={})
         with patch('pysflib.sfgerrit.SFGerritRestAPI.post',
                    side_effect=raise_fake_exc):
             self.assertFalse(self.ge.add_group_member('user1', 'p1-ptl'))
