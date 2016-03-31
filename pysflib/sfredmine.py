@@ -14,8 +14,9 @@
 
 # We rely on https://github.com/maxtepkeev/python-redmine
 
-import json
 import re
+import json
+import logging
 import requests
 
 from redmine import Redmine
@@ -29,6 +30,8 @@ from redmine.exceptions import (AuthError,
                                 RequestEntityTooLargeError,
                                 UnknownError)
 
+logger = logging.getLogger(__name__)
+
 
 class SFRedmine(Redmine):
     def __init__(self, *args, **kwargs):
@@ -37,6 +40,14 @@ class SFRedmine(Redmine):
             self.auth_cookie = kwargs['auth_cookie']
         else:
             self.auth_cookie = None
+        self.debug_logs = set()
+
+    def debug(self, msg):
+        if msg in self.debug_logs:
+            # ignore already logged message
+            return
+        self.debug_logs.add(msg)
+        logger.debug(msg)
 
     def request(self, method, url, headers=None, params=None,
                 data=None, raw_response=False):
@@ -63,6 +74,8 @@ class SFRedmine(Redmine):
         if self.auth_cookie:
             kwargs['cookies'] = dict(auth_pubtkt=self.auth_cookie)
 
+        self.debug("Send HTTP %s request %s with kwargs %s" %
+                   (method, url, str(kwargs)))
         response = getattr(requests, method)(url, **kwargs)
 
         if response.status_code in (200, 201):
