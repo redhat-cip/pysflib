@@ -175,6 +175,50 @@ class GerritUtils:
         except HTTPError as e:
             return self._manage_errors(e)
 
+    def get_project_groups_id(self, names):
+        """ Return list of groups (id) for requested
+        projects flag groups declared as projects owner
+        """
+        assert isinstance(names, list)
+        # Getting access rules for all projects hosted
+        # is done by one request specifiying multiple
+        # project names inside the query string. To act safer
+        # bulk limits the amount of projects requested in one shot
+        bulk = 50
+
+        i = 0
+        project_groups = {}
+
+        while True:
+            projects = names[i:i + bulk]
+
+            if projects:
+                query_args = "?%s" % "&".join(["project=%s" % p
+                                              for p in projects])
+
+                try:
+                    ret = self.g.get('access/%s' % query_args)
+                except HTTPError as e:
+                    return self._manage_errors(e)
+
+                for project in projects:
+                    groups_owners_ids = []
+                    groups_ids = []
+                    perms = ret[project]['local']['refs/*']['permissions']
+                    for section, permission in perms.items():
+                        if section == "owner":
+                            groups_owners_ids.extend(
+                                [x for x in permission['rules']])
+                        if section != "owner":
+                            groups_ids.extend([x for x in permission['rules']])
+                    project_groups[project] = {'owners': groups_owners_ids,
+                                               'others': groups_ids}
+                i += bulk
+            else:
+                break
+
+        return project_groups
+
     def get_project_groups(self, name):
         try:
             ret = self.g.get('access/?project=%s' % name)
@@ -187,12 +231,29 @@ class GerritUtils:
             for section, permission in perms.items():
                 groups_ids.extend([x for x in permission['rules']])
             for group_id in groups_ids:
-                gname = self.g.get('groups/{}/detail'.format(group_id))
-                groups.append(gname)
+                gdetails = self.g.get('groups/{}/detail'.format(group_id))
+                groups.append(gdetails)
 
             return groups
         except HTTPError as e:
             return self._manage_errors(e)
+
+    def get_groups_details(self, groups):
+        """ Request the group endpoint to get details
+        of multiple groups
+        """
+        assert isinstance(groups, list)
+        # It may be require we request the API by splitting the names list
+        # If the list is too long to be handled by the Gerrit server (URI)
+        query_args = "?%s" % "&".join(["q=%s" % g for g in groups])
+        query_args += "&o=MEMBERS" if groups else "o=MEMBERS"
+
+        try:
+            ret = self.g.get('groups/%s' % query_args)
+        except HTTPError as e:
+            return self._manage_errors(e)
+
+        return ret
 
     # Account related API calls #
     def get_account(self, username):
@@ -217,6 +278,7 @@ class GerritUtils:
 
     def get_user_groups(self, username):
         try:
+            username = urllib.quote_plus(username)
             return self.g.get('accounts/%s/groups' % username) or []
         except HTTPError as exp:
             self._manage_errors(exp)
