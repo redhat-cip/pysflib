@@ -269,6 +269,28 @@ class GerritUtils:
         except HTTPError as e:
             return self._manage_errors(e)
 
+    def update_account(self, id=None, username=None, **kwargs):
+        if not (bool(id) != bool(username)):
+            raise TypeError('account id OR username needed')
+        if 'full_name' in kwargs.keys():
+            try:
+                self.g.put('accounts/%s/name' % id or username,
+                           data=json.dumps({'name': kwargs['full_name']}))
+            except HTTPError as e:
+                return self._manage_errors(e)
+        if 'email' in kwargs.keys():
+            # Note that the user will have to confirm the email and set it
+            # as preferred herself in the gerrit interface.
+            try:
+                url = 'accounts/%s/emails/%s' % (id or username,
+                                                 kwargs['email'])
+                self.g.put(url)
+            except HTTPError as e:
+                return self._manage_errors(e)
+        if not ('full_name' in kwargs.keys() or 'email' in kwargs.keys()):
+            raise Exception('Unknown fields')
+        return True
+
     def get_my_groups(self):
         try:
             return self.g.get('accounts/self/groups') or []

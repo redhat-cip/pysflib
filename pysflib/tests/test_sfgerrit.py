@@ -187,6 +187,22 @@ class TestGerritUtils(TestCase):
                    side_effect=raise_fake_exc):
             self.assertFalse(self.ge.create_account('user1', {}))
 
+    def test_update_account(self):
+        self.assertRaises(TypeError, self.ge.update_account)
+        self.assertRaises(TypeError, self.ge.update_account,
+                          email='bip@bop.com')
+        self.assertRaises(Exception, self.ge.update_account,
+                          id=17, bogus_field='bleh')
+        with patch('pysflib.sfgerrit.SFGerritRestAPI.put') as p:
+            self.ge.update_account(id='2', full_name='Ricky Bobby')
+            p.assert_called_with('accounts/2/name',
+                                 data=json.dumps({'name': 'Ricky Bobby'}))
+            self.ge.update_account(id='RonBurg', full_name='Ricky Bobby')
+            p.assert_called_with('accounts/RonBurg/name',
+                                 data=json.dumps({'name': 'Ricky Bobby'}))
+            self.ge.update_account(id='2', email='blip@blop.com')
+            p.assert_called_with('accounts/2/emails/blip@blop.com')
+
     def test_get_my_groups(self):
         with patch('pysflib.sfgerrit.SFGerritRestAPI.get') as g:
             g.return_value = {
