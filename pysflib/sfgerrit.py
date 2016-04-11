@@ -270,6 +270,11 @@ class GerritUtils:
             return self._manage_errors(e)
 
     def update_account(self, id=None, username=None, **kwargs):
+        """Update a gerrit account. Only 'full_name' and 'email' can
+        be updated.
+        Other optional arguments:
+        - no_email_confirmation (default False): set to True to make new email
+          the preferred one without user confirmation. Admin only"""
         if not (bool(id) != bool(username)):
             raise TypeError('account id OR username needed')
         if 'full_name' in kwargs.keys():
@@ -284,9 +289,23 @@ class GerritUtils:
             try:
                 url = 'accounts/%s/emails/%s' % (id or username,
                                                  kwargs['email'])
-                self.g.put(url)
+                j = {'email': kwargs['email']}
+                if kwargs.get('no_email_confirmation'):
+                    j['preferred'] = True
+                    j['no_confirmation'] = True
+                self.g.put(url,
+                           data=json.dumps(j))
             except HTTPError as e:
-                return self._manage_errors(e)
+                if e.response.status_code == 409:
+                    # the email already exists, set it as preferred
+                    url = url + '/preferred'
+                    try:
+                        self.g.put(url,
+                                   data=json.dumps(j))
+                    except HTTPError as ee:
+                        return self._manage_errors(ee)
+                else:
+                    return self._manage_errors(e)
         if not ('full_name' in kwargs.keys() or 'email' in kwargs.keys()):
             raise Exception('Unknown fields')
         return True

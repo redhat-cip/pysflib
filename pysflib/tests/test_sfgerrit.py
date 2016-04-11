@@ -201,7 +201,8 @@ class TestGerritUtils(TestCase):
             p.assert_called_with('accounts/RonBurg/name',
                                  data=json.dumps({'name': 'Ricky Bobby'}))
             self.ge.update_account(id='2', email='blip@blop.com')
-            p.assert_called_with('accounts/2/emails/blip@blop.com')
+            p.assert_called_with('accounts/2/emails/blip@blop.com',
+                                 data=json.dumps({'email': 'blip@blop.com'}))
 
     def test_get_my_groups(self):
         with patch('pysflib.sfgerrit.SFGerritRestAPI.get') as g:
