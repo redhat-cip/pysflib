@@ -1,7 +1,7 @@
 PySFLib
 =======
 
-PySFLib is a python library used by the Software Factory project ( https://softwarefactory.enovance.com ).
+PySFLib is a python library used by the Software Factory project ( https://softwarefactory-project.io ).
 It is a set of wrappers over some REST APIs (Gerrit, Redmine, ...) to simplify
 management tasks on Software Factory, and provide authentication.
 
@@ -15,7 +15,7 @@ Clone this repository, then::
 Contribute
 ----------
 
-This project is hosted on https://softwarefactory.enovance.com and contributions
+This project is hosted on https://softwarefactory-project.io and contributions
 undergo a reviewing process. To contribute, please clone the repository at
-https://softwarefactory.enovance.com and setup a gerrit review account (see
+https://softwarefactory-project.io and setup a gerrit review account (see
 Software Factory's documentation for more information).
