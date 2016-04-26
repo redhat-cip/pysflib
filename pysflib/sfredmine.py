@@ -30,6 +30,8 @@ from redmine.exceptions import (AuthError,
                                 RequestEntityTooLargeError,
                                 UnknownError)
 
+from pysflib.interfaces.issuetracker import IssueTrackerUtils
+
 logger = logging.getLogger(__name__)
 
 
@@ -104,7 +106,7 @@ class SFRedmine(Redmine):
         raise UnknownError(response.status_code)
 
 
-class RedmineUtils:
+class RedmineUtils(IssueTrackerUtils):
     """ Utility class that eases calls on the Redmine API
     for software-factory. Provide the args you used to pass
     to python-redmine.Redmine and add auth_cookie to authenticate
@@ -224,6 +226,9 @@ class RedmineUtils:
                 return r.id
         return None
 
+    def get_role(self, id):
+        return self.r.role.get(id)
+
     def get_projects(self):
         url = "%s/projects.json" % self.r.url
         return self.r.request('get', url)
@@ -279,6 +284,16 @@ class RedmineUtils:
                     for x in self.r.user.filter(status=1)]
         except ResourceNotFoundError:
             return None
+
+    def get_sf_projects_url(self):
+        return "%sprojects" % self.get_root_url()
+
+    def get_root_url(self):
+        return "%s/redmine/" % self.r.url
+
+    def test_static_file(self):
+        css_file = "plugin_assets/redmine_backlogs/stylesheets/global.css"
+        return self.get_root_url() + css_file
 
 
 # Here an usage example.
