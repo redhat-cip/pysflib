@@ -286,13 +286,13 @@ class RedmineUtils(IssueTrackerUtils):
             return None
 
     def get_sf_projects_url(self):
-        return "%sprojects" % self.get_root_url()
+        return "%s/projects" % self.get_root_url()
 
     def get_root_url(self):
-        return "%s/redmine/" % self.r.url
+        return self.r.url
 
     def test_static_file(self):
-        css_file = "plugin_assets/redmine_backlogs/stylesheets/global.css"
+        css_file = "/plugin_assets/redmine_backlogs/stylesheets/global.css"
         return self.get_root_url() + css_file
 
 
