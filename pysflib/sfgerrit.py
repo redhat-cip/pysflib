@@ -17,6 +17,7 @@
 import json
 import logging
 import urllib
+import requests
 from requests.exceptions import HTTPError
 from pygerrit.rest import GerritRestAPI
 from pygerrit.rest import _decode_response
@@ -40,6 +41,13 @@ class SFGerritRestAPI(GerritRestAPI):
         else:
             super(SFGerritRestAPI, self).__init__(*args, **kwargs)
         self.debug_logs = set()
+        self.session = requests.session()
+
+    def _decode_response(self, response):
+        try:
+            return _decode_response(response)
+        except ValueError:
+            return response.content.strip()
 
     def debug(self, msg):
         if msg in self.debug_logs:
@@ -54,7 +62,7 @@ class SFGerritRestAPI(GerritRestAPI):
         self.debug("Send HTTP GET request %s with kwargs %s" %
                    (url, str(kwargs)))
         response = self.session.get(url, **kwargs)
-        return _decode_response(response)
+        return self._decode_response(response)
 
     def put(self, endpoint, **kwargs):
         kwargs.update(self.kwargs.copy())
@@ -64,7 +72,7 @@ class SFGerritRestAPI(GerritRestAPI):
         self.debug("Send HTTP PUT request %s with kwargs %s" %
                    (url, str(kwargs)))
         response = self.session.put(url, **kwargs)
-        return _decode_response(response)
+        return self._decode_response(response)
 
     def post(self, endpoint, **kwargs):
         headers = None
@@ -80,7 +88,7 @@ class SFGerritRestAPI(GerritRestAPI):
         self.debug("Send HTTP POST request %s with kwargs %s" %
                    (url, str(kwargs)))
         response = self.session.post(url, **kwargs)
-        return _decode_response(response)
+        return self._decode_response(response)
 
     def delete(self, endpoint, **kwargs):
         headers = None
@@ -94,7 +102,7 @@ class SFGerritRestAPI(GerritRestAPI):
         self.debug("Send HTTP DELETE request %s with kwargs %s" %
                    (url, str(kwargs)))
         response = self.session.delete(url, **kwargs)
-        return _decode_response(response)
+        return self._decode_response(response)
 
 
 class GerritUtils:

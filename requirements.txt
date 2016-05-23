@@ -2,4 +2,4 @@ requests[security]==2.8.1
 python-redmine==1.5.0
 pyyaml==3.11
 six==1.10.0
--e git+https://github.com/morucci/pygerrit.git#egg=pygerrit
+pygerrit>=1.0.0

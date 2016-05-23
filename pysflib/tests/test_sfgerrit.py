@@ -81,16 +81,18 @@ class TestGerritUtils(TestCase):
             self.assertFalse(self.ge.project_exists('p1'))
 
     def test_create_project(self):
-        data = json.dumps({"description": "desc",
-                           "create_empty_commit": True,
-                           "name": "ns1/pj2",
-                           "owners": "ns1/pj2-ptl"})
+        data = {"description": "desc",
+                "create_empty_commit": True,
+                "name": "ns1/pj2",
+                "owners": "ns1/pj2-ptl"}
         with patch('pysflib.sfgerrit.SFGerritRestAPI.put') as g:
             self.assertEqual(self.ge.create_project('ns1/pj2',
                                                     'desc',
                                                     'ns1/pj2-ptl'),
                              None)
-            g.assert_called_with('projects/ns1%2Fpj2', data=data)
+            args, kwargs = g.call_args
+            self.assertEqual(args[0], 'projects/ns1%2Fpj2')
+            self.assertEqual(json.loads(kwargs.get('data')), data)
 
         with patch('pysflib.sfgerrit.SFGerritRestAPI.put',
                    side_effect=raise_fake_exc):
@@ -286,20 +288,24 @@ class TestGerritUtils(TestCase):
             g.assert_called_with('groups/')
 
     def test_create_group(self):
-        data = json.dumps({"visible_to_all": True,
-                           "description": "desc",
-                           "name": "p1-ptl"})
+        data = {"visible_to_all": True,
+                "description": "desc",
+                "name": "p1-ptl"}
         with patch('pysflib.sfgerrit.SFGerritRestAPI.put') as g:
             self.assertEqual(self.ge.create_group('p1-ptl', 'desc'), None)
-            g.assert_called_with('groups/p1-ptl', data=data)
+            args, kwargs = g.call_args
+            self.assertEqual(args[0], 'groups/p1-ptl')
+            self.assertEqual(json.loads(kwargs.get('data')), data)
 
-        data = json.dumps({"visible_to_all": True,
-                           "description": "desc",
-                           "name": "ns1\\prj1-dev"})
+        data = {"visible_to_all": True,
+                "description": "desc",
+                "name": "ns1\\prj1-dev"}
         with patch('pysflib.sfgerrit.SFGerritRestAPI.put') as g:
             self.assertEqual(self.ge.create_group('ns1\\prj1-dev', 'desc'),
                              None)
-            g.assert_called_with('groups/ns1%5Cprj1-dev', data=data)
+            args, kwargs = g.call_args
+            self.assertEqual(args[0], 'groups/ns1%5Cprj1-dev')
+            self.assertEqual(json.loads(kwargs.get('data')), data)
 
         with patch('pysflib.sfgerrit.SFGerritRestAPI.put',
                    side_effect=raise_fake_exc):
