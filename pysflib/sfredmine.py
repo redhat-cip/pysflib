@@ -234,17 +234,25 @@ class RedmineUtils(IssueTrackerUtils):
         return self.r.request('get', url)
 
     def get_project_membership_for_user(self, pname, uid):
+        """ This function support both user or group id
+        """
         try:
             pname = self._slugify(pname)
             memb = self.r.project_membership.filter(project_id=pname)
         except ResourceNotFoundError:
             return None
         for m in memb:
-            if m.user.id == uid:
-                return m.id
+            if hasattr(m, 'user'):
+                if m.user.id == uid:
+                    return m.id
+            if hasattr(m, 'group'):
+                if m.group['id'] == uid:
+                    return m.id
         return None
 
     def get_project_roles_for_user(self, pname, uid):
+        """ This function support both user or group id
+        """
         mid = self.get_project_membership_for_user(pname, uid)
         try:
             return [r['name'] for r in
@@ -295,10 +303,44 @@ class RedmineUtils(IssueTrackerUtils):
         css_file = "/plugin_assets/redmine_backlogs/stylesheets/global.css"
         return self.get_root_url() + css_file
 
+    def create_group(self, name):
+        try:
+            self.r.group.create(name=name)
+        except ValidationError, e:
+            if str(e) != 'Name has already been taken':
+                return False
+        return True
+
+    def get_group_id(self, name):
+        groups = self.r.group.all()
+        try:
+            gid = [g.id for g in groups if g.name == name][0]
+        except IndexError:
+            return None
+        return gid
+
+    def set_group_members(self, gid, user_ids):
+        try:
+            return self.r.group.update(gid, user_ids=user_ids)
+        except ResourceNotFoundError:
+            return None
+
+    def list_group(self, gid):
+        try:
+            return self.r.group.get(gid, include='users').users
+        except ResourceNotFoundError:
+            return None
+
+    def delete_group(self, gid):
+        try:
+            return self.r.group.delete(gid)
+        except ResourceNotFoundError:
+            return None
+
 
 # Here an usage example.
 if __name__ == "__main__":
     import sfauth
-    c = sfauth.get_cookie('tests.dom', 'user1', 'userpass')
-    a = RedmineUtils('http://redmine.tests.dom', auth_cookie=c)
-    a.create_user('fbo', 'fbo@totot.fr', 'Fabien B')
+    c = sfauth.get_cookie('sftests.com', 'admin', 'userpass')
+    a = RedmineUtils('http://sftests.com/redmine', auth_cookie=c)
+    a.create_user('John', 'john@doe.com', 'John Doe')

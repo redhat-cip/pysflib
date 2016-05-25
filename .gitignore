@@ -2,3 +2,5 @@
 .tox
 *.egg
 *.egg-info
+.coverage
+coverage.xml

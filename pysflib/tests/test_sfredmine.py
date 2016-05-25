@@ -239,3 +239,31 @@ class TestSFRedmine(TestCase):
                    new_callable=lambda: my_fake_resource):
             self.assertEqual([('user1', 'toto@example.com', 'user1 TotoMan')],
                              self.rm.active_users())
+
+    def test_create_group(self):
+        with patch('redmine.managers.ResourceManager.create') as c:
+            self.rm.create_group('mygroup')
+            self.assertTrue(c.called)
+
+    def test_list_group(self):
+        with patch('redmine.managers.ResourceManager.get') as c:
+            self.rm.list_group('mygroup')
+            self.assertTrue(c.called)
+
+    def test_delete_group(self):
+        with patch('redmine.managers.ResourceManager.delete') as c:
+            self.rm.delete_group('12')
+            self.assertTrue(c.called)
+
+    def test_get_group_id(self):
+        def my_fake_resource(*args, **kwargs):
+            return [FakeRes()]
+        with patch('redmine.managers.ResourceManager.all',
+                   new_callable=lambda: my_fake_resource):
+            self.assertEqual(1, self.rm.get_group_id('Open'))
+            self.assertEqual(None, self.rm.get_group_id('Test'))
+
+    def test_set_group_members(self):
+        with patch('redmine.managers.ResourceManager.update') as c:
+            self.rm.set_group_members(1, [3, 4, 5])
+            self.assertTrue(c.called)
