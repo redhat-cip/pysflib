@@ -65,10 +65,16 @@ class SFGerritRestAPI(GerritRestAPI):
         return self._decode_response(response)
 
     def put(self, endpoint, **kwargs):
+        headers = None
+        if 'headers' in kwargs:
+            headers = kwargs['headers']
+            del kwargs['headers']
         kwargs.update(self.kwargs.copy())
-        url = self.make_url(endpoint)
         kwargs["headers"].update(
             {"Content-Type": "application/json;charset=UTF-8"})
+        if headers is not None:
+            kwargs["headers"] = headers
+        url = self.make_url(endpoint)
         self.debug("Send HTTP PUT request %s with kwargs %s" %
                    (url, str(kwargs)))
         response = self.session.put(url, **kwargs)
@@ -226,6 +232,12 @@ class GerritUtils:
                 break
 
         return project_groups
+
+    def get_groups(self):
+        try:
+            return self.g.get('groups/?')
+        except HTTPError as e:
+            return self._manage_errors(e)
 
     def get_project_groups(self, name):
         try:
@@ -432,7 +444,41 @@ class GerritUtils:
         try:
             groupname = urllib.quote_plus(groupname)
             self.g.delete('groups/%s/members/%s' % (groupname,
-                                                    username))
+                                                    username),
+                          headers={})
+        except HTTPError as e:
+            return self._manage_errors(e)
+
+    def add_group_group_member(self, targetgroup, groupname):
+        """ Add a group as a member of targetgroup
+        """
+        try:
+            targetgroup = urllib.quote_plus(targetgroup)
+            groupname = urllib.quote_plus(groupname)
+            self.g.put('groups/%s/groups/%s' % (targetgroup,
+                                                groupname),
+                       headers={})
+        except HTTPError as e:
+            return self._manage_errors(e)
+
+    def get_group_group_members(self, group_id):
+        """ Get members (only groups) from a group
+        """
+        try:
+            group_id = urllib.quote_plus(group_id)
+            return self.g.get('groups/%s/groups/' % group_id)
+        except HTTPError as e:
+            return self._manage_errors(e)
+
+    def delete_group_group_member(self, targetgroup, groupname):
+        """ Delete a group from targetgroup
+        """
+        try:
+            targetgroup = urllib.quote_plus(targetgroup)
+            groupname = urllib.quote_plus(groupname)
+            self.g.delete('groups/%s/groups/%s' % (targetgroup,
+                                                   groupname),
+                          headers={})
         except HTTPError as e:
             return self._manage_errors(e)
 
@@ -540,13 +586,13 @@ class GerritUtils:
 
 # Examples
 if __name__ == "__main__":
+    # logger.setLevel(logging.DEBUG)
     # Call with the SSO cookie
     import sfauth
-    c = sfauth.get_cookie('tests.dom', 'user1', 'userpass')
-    # print c
-    a = GerritUtils('http://gerrit.tests.dom', auth_cookie=c)
+    c = sfauth.get_cookie('sftests.com', 'admin', 'userpass')
+    a = GerritUtils('http://sftests.com', auth_cookie=c)
     # Call with a basic auth
     # from requests.auth import HTTPBasicAuth
     # auth = HTTPBasicAuth('user1', 'userpass')
-    # a = GerritUtils('http://gerrit.tests.dom/api', auth=auth)
-    print a.member_in_group('user1', 'config-ptl')
+    # a = GerritUtils('http://sftests.com/api', auth=auth)
+    print a.member_in_group('admin', 'config-ptl')

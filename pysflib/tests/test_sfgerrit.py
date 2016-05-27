@@ -287,6 +287,11 @@ class TestGerritUtils(TestCase):
             self.assertTrue(self.ge.group_exists('ns\p1-dev'))
             g.assert_called_with('groups/')
 
+    def test_get_groups(self):
+        with patch('pysflib.sfgerrit.SFGerritRestAPI.get') as g:
+            g.return_value = ['grp1', 'grp2']
+            self.assertTrue(self.ge.get_groups())
+
     def test_create_group(self):
         data = {"visible_to_all": True,
                 "description": "desc",
@@ -371,6 +376,40 @@ class TestGerritUtils(TestCase):
         with patch('pysflib.sfgerrit.SFGerritRestAPI.delete',
                    side_effect=raise_fake_exc):
             self.assertFalse(self.ge.delete_group_member('p1-ptl', 'user1'))
+
+    def test_add_group_group_member(self):
+        with patch('pysflib.sfgerrit.SFGerritRestAPI.put') as g:
+            self.assertEqual(self.ge.add_group_group_member('p1-ptl',
+                             'stdgroup'), None)
+            g.assert_called_with('groups/p1-ptl/groups/stdgroup', headers={})
+
+        with patch('pysflib.sfgerrit.SFGerritRestAPI.put') as g:
+            self.assertEqual(self.ge.add_group_group_member('n3/p2-ptl',
+                             'std/stdgroup'),
+                             None)
+            g.assert_called_with('groups/n3%2Fp2-ptl/groups/std%2Fstdgroup',
+                                 headers={})
+        with patch('pysflib.sfgerrit.SFGerritRestAPI.put',
+                   side_effect=raise_fake_exc):
+            self.assertFalse(self.ge.add_group_group_member(
+                'p1-ptl', 'stdgroup'))
+
+    def test_delete_group_group_member(self):
+        with patch('pysflib.sfgerrit.SFGerritRestAPI.delete'):
+            self.assertEqual(self.ge.delete_group_group_member(
+                             'p1-ptl', 'stdgroup'),
+                             None)
+        with patch('pysflib.sfgerrit.SFGerritRestAPI.delete',
+                   side_effect=raise_fake_exc):
+            self.assertFalse(self.ge.delete_group_group_member(
+                             'p1-ptl', 'stdgroup'))
+
+    def test_get_group_group_members(self):
+        with patch('pysflib.sfgerrit.SFGerritRestAPI.get') as g:
+            members = [{'_group_id': 1, 'name': 'stdgroup'}]
+            g.return_value = members
+            self.assertEqual(self.ge.get_group_members('stdgroup'),
+                             members)
 
     def test_add_pubkey(self):
         with patch('pysflib.sfgerrit.SFGerritRestAPI.post') as p:
