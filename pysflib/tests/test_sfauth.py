@@ -57,7 +57,7 @@ class TestSFAuth(TestCase):
 
     def test_get_cookie(self):
         with patch('pysflib.sfauth.requests.get') as g:
-            methods = ['Password', 'GithubPersonalAccessToken']
+            methods = ['Password', 'GithubPersonalAccessToken', 'APIKey']
             header = {'Content-Type': 'application/json'}
             info = {'service': {'name': 'cauth',
                                 'version': '0.4.1',
@@ -69,9 +69,9 @@ class TestSFAuth(TestCase):
                     '1234',
                     sfauth.get_cookie('auth.tests.dom', 'user1', 'userpass'))
                 auth_context = {'back': '/',
-                                'method': 'Password',
                                 'args': {'username': 'user1',
-                                         'password': 'userpass'}}
+                                         'password': 'userpass'},
+                                'method': 'Password', }
                 p.assert_called_with('http://auth.tests.dom/auth/login',
                                      json.dumps(auth_context),
                                      allow_redirects=False,
@@ -83,6 +83,17 @@ class TestSFAuth(TestCase):
                 auth_context = {'back': '/',
                                 'method': 'GithubPersonalAccessToken',
                                 'args': {'token': 'abcd'}}
+                p.assert_called_with('http://auth.tests.dom/auth/login',
+                                     json.dumps(auth_context),
+                                     allow_redirects=False,
+                                     headers=header)
+                self.assertEqual(
+                    '1234',
+                    sfauth.get_cookie('auth.tests.dom',
+                                      api_key='abcd'))
+                auth_context = {'back': '/',
+                                'method': 'APIKey',
+                                'args': {'api_key': 'abcd'}}
                 p.assert_called_with('http://auth.tests.dom/auth/login',
                                      json.dumps(auth_context),
                                      allow_redirects=False,

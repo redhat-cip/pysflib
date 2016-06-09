@@ -50,6 +50,7 @@ def _old_get_cookie(auth_server,
 def get_cookie(auth_server,
                username=None, password=None,
                github_access_token=None,
+               api_key=None,
                use_ssl=False, verify=True):
     try:
         cauth_info = get_cauth_info(auth_server, use_ssl, verify)
@@ -66,6 +67,9 @@ def get_cookie(auth_server,
                   ('GithubPersonalAccessToken' in methods)):
                 auth_params['args'] = {'token': github_access_token}
                 auth_params['method'] = 'GithubPersonalAccessToken'
+            elif (api_key and ('APIKey' in methods)):
+                auth_params['args'] = {'api_key': api_key}
+                auth_params['method'] = 'APIKey'
             else:
                 m = "Missing credentials (accepted auth methods: %s)"
                 methods = ','.join(methods)
