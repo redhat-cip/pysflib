@@ -161,10 +161,11 @@ class RedmineUtils(IssueTrackerUtils):
         except ResourceNotFoundError:
             return None
 
-    def create_issue(self, name, subject=''):
+    def create_issue(self, name, subject='', **kwargs):
         name = self._slugify(name)
         issue = self.r.issue.create(project_id=name,
-                                    subject=subject)
+                                    subject=subject,
+                                    **kwargs)
         return issue.id
 
     def delete_issue(self, issueid):
