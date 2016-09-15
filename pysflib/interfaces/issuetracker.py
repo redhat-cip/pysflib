@@ -19,7 +19,7 @@ class IssueTrackerUtils:
     """
     def __init__(self, *args, **kwargs):
         """used mainly to initialize a client to the tracker."""
-        raise NotImplementedError
+        pass
 
     def project_exists(self, name):
         """checks whether a project exists or not, returns a boolean"""
