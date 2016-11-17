@@ -181,6 +181,7 @@ class GerritUtils:
 
     def get_project_owner(self, name):
         try:
+            name = urllib.quote_plus(name)
             ret = self.g.get('access/?project=%s' % name)
             perms = ret[name]['local']['refs/*']['permissions']
             owner = perms.get('owner')
@@ -241,6 +242,7 @@ class GerritUtils:
 
     def get_project_groups(self, name):
         try:
+            name = urllib.quote_plus(name)
             ret = self.g.get('access/?project=%s' % name)
             if 'refs/*' not in ret[name]['local']:
                 return []
@@ -278,12 +280,14 @@ class GerritUtils:
     # Account related API calls #
     def get_account(self, username):
         try:
+            username = urllib.quote_plus(username)
             return self.g.get('accounts/%s' % username)
         except HTTPError as e:
             return self._manage_errors(e)
 
     def create_account(self, username, user_data):
         try:
+            username = urllib.quote_plus(username)
             return self.g.put('accounts/%s' % username,
                               data=json.dumps(user_data))
         except HTTPError as e:
@@ -433,6 +437,7 @@ class GerritUtils:
 
     def add_group_member(self, username, groupname):
         try:
+            username = urllib.quote_plus(username)
             groupname = urllib.quote_plus(groupname)
             self.g.post('groups/%s/members/%s' % (groupname,
                                                   username),
@@ -442,6 +447,7 @@ class GerritUtils:
 
     def delete_group_member(self, groupname, username):
         try:
+            username = urllib.quote_plus(username)
             groupname = urllib.quote_plus(groupname)
             self.g.delete('groups/%s/members/%s' % (groupname,
                                                     username),
