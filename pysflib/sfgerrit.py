@@ -120,6 +120,12 @@ class GerritUtils:
     def __init__(self, *args, **kwargs):
         self.g = SFGerritRestAPI(*args, **kwargs)
 
+    def quote(self, toquote):
+        if isinstance(toquote, basestring):
+            return urllib.quote_plus(toquote)
+        else:
+            return toquote
+
     def _manage_errors(self, e):
         if e.response.status_code == 404:
             return False
@@ -131,7 +137,7 @@ class GerritUtils:
     # Projects related API calls #
     def project_exists(self, name):
         try:
-            name = urllib.quote_plus(name)
+            name = self.quote(name)
             self.g.get('projects/%s' % name)
             return True
         except HTTPError as e:
@@ -145,7 +151,7 @@ class GerritUtils:
             "owners": owners,
         })
         try:
-            name = urllib.quote_plus(name)
+            name = self.quote(name)
             self.g.put('projects/%s' % name,
                        data=data)
         except HTTPError as e:
@@ -153,7 +159,7 @@ class GerritUtils:
 
     def delete_project(self, name, force=False):
         try:
-            name = urllib.quote_plus(name)
+            name = self.quote(name)
             if force:
                 data = json.dumps({"force": True})
                 self.g.delete(
@@ -168,7 +174,7 @@ class GerritUtils:
 
     def get_project(self, name):
         try:
-            name = urllib.quote_plus(name)
+            name = self.quote(name)
             return self.g.get('projects/%s' % name)
         except HTTPError as e:
             return self._manage_errors(e)
@@ -181,7 +187,7 @@ class GerritUtils:
 
     def get_project_owner(self, name):
         try:
-            ret = self.g.get('access/?project=%s' % name)
+            ret = self.g.get('access/?project=%s' % self.quote(name))
             perms = ret[name]['local']['refs/*']['permissions']
             owner = perms.get('owner')
             if owner:
@@ -241,7 +247,7 @@ class GerritUtils:
 
     def get_project_groups(self, name):
         try:
-            ret = self.g.get('access/?project=%s' % name)
+            ret = self.g.get('access/?project=%s' % self.quote(name))
             if 'refs/*' not in ret[name]['local']:
                 return []
             perms = ret[name]['local']['refs/*']['permissions']
@@ -278,12 +284,14 @@ class GerritUtils:
     # Account related API calls #
     def get_account(self, username):
         try:
+            username = self.quote(username)
             return self.g.get('accounts/%s' % username)
         except HTTPError as e:
             return self._manage_errors(e)
 
     def create_account(self, username, user_data):
         try:
+            username = self.quote(username)
             return self.g.put('accounts/%s' % username,
                               data=json.dumps(user_data))
         except HTTPError as e:
@@ -339,7 +347,7 @@ class GerritUtils:
 
     def get_user_groups(self, username):
         try:
-            username = urllib.quote_plus(username)
+            username = self.quote(username)
             return self.g.get('accounts/%s/groups' % username) or []
         except HTTPError as exp:
             self._manage_errors(exp)
@@ -361,7 +369,7 @@ class GerritUtils:
 
     def get_user_groups_id(self, username):
         try:
-            username = urllib.quote_plus(username)
+            username = self.quote(username)
             grps = self.g.get('accounts/%s/groups' % username) or []
             return [g['id'] for g in grps]
         except HTTPError as e:
@@ -378,7 +386,7 @@ class GerritUtils:
             "visible_to_all": True
         })
         try:
-            name = urllib.quote_plus(name)
+            name = self.quote(name)
             self.g.put('groups/%s' % name,
                        data=data)
         except HTTPError as e:
@@ -386,14 +394,14 @@ class GerritUtils:
 
     def get_group_id(self, name):
         try:
-            name = urllib.quote_plus(name)
+            name = self.quote(name)
             return self.g.get('groups/%s/detail' % name)['id']
         except HTTPError as e:
             return self._manage_errors(e)
 
     def get_group_members(self, group_id):
         try:
-            group_id = urllib.quote_plus(group_id)
+            group_id = self.quote(group_id)
             return self.g.get('groups/%s/members/' % group_id)
         except HTTPError as e:
             return self._manage_errors(e)
@@ -417,23 +425,23 @@ class GerritUtils:
 
     def get_group_owner(self, name):
         try:
-            name = urllib.quote_plus(name)
+            name = self.quote(name)
             return self.g.get('groups/%s/owner' % name)['owner']
         except HTTPError as e:
             return self._manage_errors(e)
 
     def member_in_group(self, username, groupname):
         try:
-            groupname = urllib.quote_plus(groupname)
-            grp = self.g.get('groups/%s/members/%s' % (groupname,
-                                                       username))
+            grp = self.g.get('groups/%s/members/%s' % (
+                self.quote(groupname), self.quote(username)))
             return (len(grp) >= 1 and grp['username'] == username)
         except HTTPError as e:
             return self._manage_errors(e)
 
     def add_group_member(self, username, groupname):
         try:
-            groupname = urllib.quote_plus(groupname)
+            username = self.quote(username)
+            groupname = self.quote(groupname)
             self.g.post('groups/%s/members/%s' % (groupname,
                                                   username),
                         headers={})
@@ -442,7 +450,8 @@ class GerritUtils:
 
     def delete_group_member(self, groupname, username):
         try:
-            groupname = urllib.quote_plus(groupname)
+            username = self.quote(username)
+            groupname = self.quote(groupname)
             self.g.delete('groups/%s/members/%s' % (groupname,
                                                     username),
                           headers={})
@@ -453,8 +462,8 @@ class GerritUtils:
         """ Add a group as a member of targetgroup
         """
         try:
-            targetgroup = urllib.quote_plus(targetgroup)
-            groupname = urllib.quote_plus(groupname)
+            targetgroup = self.quote(targetgroup)
+            groupname = self.quote(groupname)
             self.g.put('groups/%s/groups/%s' % (targetgroup,
                                                 groupname),
                        headers={})
@@ -465,7 +474,7 @@ class GerritUtils:
         """ Get members (only groups) from a group
         """
         try:
-            group_id = urllib.quote_plus(group_id)
+            group_id = self.quote(group_id)
             return self.g.get('groups/%s/groups/' % group_id)
         except HTTPError as e:
             return self._manage_errors(e)
@@ -474,8 +483,8 @@ class GerritUtils:
         """ Delete a group from targetgroup
         """
         try:
-            targetgroup = urllib.quote_plus(targetgroup)
-            groupname = urllib.quote_plus(groupname)
+            targetgroup = self.quote(targetgroup)
+            groupname = self.quote(groupname)
             self.g.delete('groups/%s/groups/%s' % (targetgroup,
                                                    groupname),
                           headers={})
@@ -492,7 +501,7 @@ class GerritUtils:
 
     def del_pubkey(self, index, user='self'):
         try:
-            self.g.delete('accounts/%s/sshkeys/%s' % (user, str(index)),
+            self.g.delete('accounts/%s/sshkeys/%s' % (user, index),
                           headers={})
         except HTTPError as e:
             return self._manage_errors(e)
