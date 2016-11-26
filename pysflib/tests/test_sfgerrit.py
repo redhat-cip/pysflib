@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import os
 import json
 from mock import patch
 from mock import Mock
@@ -19,6 +20,9 @@ from requests.exceptions import HTTPError
 from unittest import TestCase
 
 from pysflib import sfgerrit
+
+
+TEST_DATA = "%s/test_data" % os.path.dirname(__file__)
 
 
 def raise_fake_exc(*args, **kwargs):
@@ -135,7 +139,7 @@ class TestGerritUtils(TestCase):
             self.assertEqual(self.ge.get_project_owner('p1'), None)
 
     def test_get_project_groups_id(self):
-        r1 = json.load(open('test_data/gerrit_access.json'))
+        r1 = json.load(open('%s/gerrit_access.json' % TEST_DATA))
         with patch('pysflib.sfgerrit.SFGerritRestAPI.get',
                    side_effect=[r1]) as g:
             groups = self.ge.get_project_groups_id(['project1'])
@@ -153,7 +157,7 @@ class TestGerritUtils(TestCase):
             g.assert_called_with('groups/?o=MEMBERS')
 
     def test_get_project_groups(self):
-        r1 = json.load(open('test_data/gerrit_access.json'))
+        r1 = json.load(open('%s/gerrit_access.json' % TEST_DATA))
         r2 = 'p1-dev'
         r3 = 'p1-ptl'
         with patch('pysflib.sfgerrit.SFGerritRestAPI.get',
@@ -167,7 +171,7 @@ class TestGerritUtils(TestCase):
             self.assertFalse(self.ge.get_project_groups('p1'))
 
     def test_get_project_groups_without_permission(self):
-        r1 = json.load(open('test_data/gerrit_access.json'))
+        r1 = json.load(open('%s/gerrit_access.json' % TEST_DATA))
         with patch('pysflib.sfgerrit.SFGerritRestAPI.get',
                    side_effect=[r1]):
             groups = self.ge.get_project_groups('MyProject')

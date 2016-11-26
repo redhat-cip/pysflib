@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 # Copyright (C) 2014 eNovance SAS <licensing@enovance.com>
 #
@@ -14,40 +13,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-try:
-    from setuptools import setup, find_packages
-except ImportError:
-    from ez_setup import use_setuptools
-    use_setuptools()
-    from setuptools import setup, find_packages
+import setuptools
 
-try:
-    import multiprocessing  # noqa
-except:
-    pass
-
-# install using requirements.txt
-INSTALL_REQUIRES = []
-
-
-DEP_LINKS = []
-
-VERSION = '0.7.0'
-
-setup(
-    name='pysflib',
-    version=VERSION,
-    description=('a python library to interact with '
-                 'a software factory instance'),
-    author='Software Factory',
-    author_email='softwarefactory@enovance.com',
-    install_requires=INSTALL_REQUIRES,
-    dependency_links=DEP_LINKS,
-    test_suite='nose.collector',
-    zip_safe=False,
-    include_package_data=True,
-    packages=find_packages(exclude=['ez_setup']),
-    url='http://softwarefactory.enovance.com/r/gitweb?p=pysflib.git;a=summary',
-    download_url='https://github.com/redhat-cip/pysflib/tarball/%s' % VERSION,
-    keywords=['software factory', 'CI', 'continuous integration'],
-)
+setuptools.setup(
+    setup_requires=['pbr'],
+    pbr=True)

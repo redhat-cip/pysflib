@@ -1,5 +1,6 @@
-requests[security]==2.8.1
-python-redmine==1.5.0
+pbr>=1.6
+requests
 pyyaml==3.11
 six==1.10.0
+python-redmine==1.5.0
 pygerrit>=1.0.0

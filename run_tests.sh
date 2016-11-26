@@ -18,8 +18,4 @@ echo "$(date) - $(hostname)"
 
 echo "Pysflib tests"
 echo "~~~~~~~~~~~~~"
-(rm -Rf .tox; tox)
-PYSFLIB_ERRORS=$?
-echo
-
-exit ${PYSFLIB_ERRORS}
+exec tox
