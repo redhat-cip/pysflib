@@ -322,8 +322,9 @@ class TestGerritUtils(TestCase):
 
     def test_get_group_id(self):
         with patch('pysflib.sfgerrit.SFGerritRestAPI.get') as g:
-            g.return_value = {'id': 1}
-            self.assertEqual(self.ge.get_group_id('p1-ptl'), 1)
+            g.return_value = {'id': 'global%3AAnonymous-Users'}
+            self.assertEqual(self.ge.get_group_id('p1-ptl'),
+                             'global:Anonymous-Users')
         with patch('pysflib.sfgerrit.SFGerritRestAPI.get',
                    side_effect=raise_fake_exc):
             self.assertFalse(self.ge.get_group_id('p1-ptl'))

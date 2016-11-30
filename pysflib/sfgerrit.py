@@ -395,7 +395,8 @@ class GerritUtils:
     def get_group_id(self, name):
         try:
             name = self.quote(name)
-            return self.g.get('groups/%s/detail' % name)['id']
+            gid = self.g.get('groups/%s/detail' % name)['id']
+            return urllib.unquote_plus(gid)
         except HTTPError as e:
             return self._manage_errors(e)
 
