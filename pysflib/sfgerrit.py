@@ -16,6 +16,7 @@
 
 import json
 import logging
+import time
 import urllib
 import requests
 from requests.exceptions import HTTPError
@@ -592,6 +593,42 @@ class GerritUtils:
             return self.g.get('changes/?q=status:open')
         except HTTPError as e:
             return self._manage_errors(e)
+
+    def get_info(self, change_number):
+        try:
+            return self.g.get("changes/%d/detail" % change_number)
+        except HTTPError as e:
+            msg = "Couldn't get change %d info (%s)" % (change_number, e)
+            logger.error(msg)
+
+    def get_vote(self, change_number, label, username="jenkins"):
+        info = self.get_info(change_number)
+        if not info:
+            return None
+        for vote in info["labels"][label].get("all", []):
+            if vote.get("username") == username:
+                return vote.get("value")
+
+    def wait_for_verify(self, change_number, timeout=60):
+        for retry in xrange(timeout):
+            vote = self.get_vote(change_number, "Verified", "jenkins")
+            if vote is not None and vote != 0:
+                return vote
+            time.sleep(1)
+        msg = "Jenkins didn't vote on %d" % change_number
+        logger.error(msg)
+        raise RuntimeError(msg)
+
+    def get_change_number(self, commit_sha):
+        try:
+            changes = self.g.get("changes/?q=commit:%s" % commit_sha)
+        except HTTPError as e:
+            msg = "Couldn't get changes for commit %s (%s)" % (commit_sha, e)
+            logger.error(msg)
+            raise RuntimeError(msg)
+        if len(changes) != 1:
+            logger.warning("Multiple change match commit %s" % commit_sha)
+        return changes[0]['_number']
 
 
 # Examples
