@@ -39,22 +39,6 @@ class FakeJSONResponse(object):
 
 
 class TestSFAuth(TestCase):
-    def test_get_cookie_old_style(self):
-        with patch('pysflib.sfauth.requests.get') as g:
-            g.return_value = FakeJSONResponse({})
-            g.return_value.status_code = 404
-            with patch('pysflib.sfauth.requests.post',
-                       new_callable=lambda: fake_send_request):
-                self.assertEqual(
-                    '1234',
-                    sfauth.get_cookie('auth.tests.dom', 'user1', 'userpass'))
-                self.assertEqual(
-                    '1234',
-                    sfauth.get_cookie('auth.tests.dom',
-                                      github_access_token='abcd'))
-                self.assertRaises(ValueError, sfauth.get_cookie,
-                                  'auth.tests.dom')
-
     def test_get_cookie(self):
         with patch('pysflib.sfauth.requests.get') as g:
             methods = ['Password', 'GithubPersonalAccessToken', 'APIKey']
@@ -67,26 +51,29 @@ class TestSFAuth(TestCase):
                 p.return_value = Fake()
                 self.assertEqual(
                     '1234',
-                    sfauth.get_cookie('auth.tests.dom', 'user1', 'userpass'))
+                    sfauth.get_cookie('https://auth.tests.dom', 'user1',
+                                      'userpass'))
                 auth_context = {'back': '/',
                                 'args': {'username': 'user1',
                                          'password': 'userpass'},
                                 'method': 'Password', }
-                p.assert_called_with('http://auth.tests.dom/auth/login',
-                                     json.dumps(auth_context),
+                p.assert_called_with('https://auth.tests.dom/auth/login',
+                                     json.dumps(auth_context, sort_keys=True),
                                      allow_redirects=False,
-                                     headers=header)
+                                     headers=header,
+                                     verify=True)
                 self.assertEqual(
                     '1234',
-                    sfauth.get_cookie('auth.tests.dom',
+                    sfauth.get_cookie('https://auth.tests.dom',
                                       github_access_token='abcd'))
                 auth_context = {'back': '/',
                                 'method': 'GithubPersonalAccessToken',
                                 'args': {'token': 'abcd'}}
-                p.assert_called_with('http://auth.tests.dom/auth/login',
-                                     json.dumps(auth_context),
+                p.assert_called_with('https://auth.tests.dom/auth/login',
+                                     json.dumps(auth_context, sort_keys=True),
                                      allow_redirects=False,
-                                     headers=header)
+                                     headers=header,
+                                     verify=True)
                 self.assertEqual(
                     '1234',
                     sfauth.get_cookie('auth.tests.dom',
@@ -94,10 +81,11 @@ class TestSFAuth(TestCase):
                 auth_context = {'back': '/',
                                 'method': 'APIKey',
                                 'args': {'api_key': 'abcd'}}
-                p.assert_called_with('http://auth.tests.dom/auth/login',
-                                     json.dumps(auth_context),
+                p.assert_called_with('https://auth.tests.dom/auth/login',
+                                     json.dumps(auth_context, sort_keys=True),
                                      allow_redirects=False,
-                                     headers=header)
+                                     headers=header,
+                                     verify=True)
 
     def test_get_cauth_info(self):
         with patch('pysflib.sfauth.requests.get') as g:
@@ -105,9 +93,10 @@ class TestSFAuth(TestCase):
                 'name': 'cauth',
                 'version': 'x.y.z',
                 'auth_methods': ['password', 'openid']}})
-            i = sfauth.get_cauth_info('auth.tests.dom')
-            g.assert_called_with('http://auth.tests.dom/auth/about/',
-                                 allow_redirects=False)
+            i = sfauth.get_cauth_info('https://auth.tests.dom')
+            g.assert_called_with('https://auth.tests.dom/auth/about/',
+                                 allow_redirects=False,
+                                 verify=True)
             self.assertEqual('cauth',
                              i['service']['name'])
 
@@ -117,8 +106,9 @@ class TestSFAuth(TestCase):
                 'name': 'managesf',
                 'version': 'x.y.z',
                 'services': ['gerrit', ]}})
-            i = sfauth.get_managesf_info('auth.tests.dom')
-            g.assert_called_with('http://auth.tests.dom/about/',
-                                 allow_redirects=False)
+            i = sfauth.get_managesf_info('https://auth.tests.dom')
+            g.assert_called_with('https://auth.tests.dom/about/',
+                                 allow_redirects=False,
+                                 verify=True)
             self.assertEqual('managesf',
                              i['service']['name'])
