@@ -501,6 +501,12 @@ class GerritUtils:
                                data=pubkey)
         return response['seq']
 
+    def get_pubkeys(self, user='self'):
+        headers = {'content-type': 'plain/text'}
+        response = self.g.get('accounts/%s/sshkeys' % user,
+                              headers=headers)
+        return response
+
     def del_pubkey(self, index, user='self'):
         try:
             self.g.delete('accounts/%s/sshkeys/%s' % (user, index),
